@@ -16,9 +16,11 @@ import javax.swing.JFrame;
 */
 public class HueHistogram extends JComponent
 {
+    int marginL   = 14;
+    int marginR   = 18;
     int baseline  = 10;
     int linewidth = 1;
-    int binwidth  = 4;
+    int binwidth  = 6;
     int bincount;
     int[] counts   = null;
 
@@ -33,6 +35,10 @@ public class HueHistogram extends JComponent
     */
     public void add(int rank, int number)
     {
+        // while(rank < 0)
+        //     rank += Hue.MAXIMUM;
+        // while(rank > Hue.MAXIMUM)
+        //     rank -= Hue.MAXIMUM;
         counts[rank/binwidth] += number;
     }
 
@@ -41,7 +47,7 @@ public class HueHistogram extends JComponent
     */
     public void add(int rank)
     {
-        counts[rank/binwidth]++;
+        add(rank, 1);
     }
 
     /**
@@ -88,6 +94,7 @@ public class HueHistogram extends JComponent
 
         // draw histogram
         int histoheight = height - baseline;
+        int histowidth  = width - marginR - marginL;
         int onset       = 0;
         int offset;
         int onsetx, binx;
@@ -95,11 +102,11 @@ public class HueHistogram extends JComponent
         for(int bin=0; bin<bincount; bin++)
         {
             offset = (bin+1)*binwidth;
-            onsetx = onset*width/360;
-            binx   = (offset*width/360) - onsetx;
+            onsetx = onset*histowidth/360;
+            binx   = (offset*histowidth/360) - onsetx;
             biny   = binHeight(histoheight, logmax, counts[bin]);
             g.setColor(Hue.getColor(Hue.normalize(onset + (binwidth/2))));
-            g.fillRect(onsetx, histoheight-biny, binx, biny);
+            g.fillRect(marginL+onsetx, histoheight-biny, binx, biny);
             onset  = offset;
         }
     }

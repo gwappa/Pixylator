@@ -55,7 +55,27 @@ public class Hue
     */
     public static int fromRGB(int r, int g, int b)
     {
-        return 0;
+        double rr = r*1.0/255;
+        double gg = g*1.0/255;
+        double bb = b*1.0/255;
+        double hh = Double.NaN;
+        double mm;
+
+        if( (rr >= gg) && (gg >= bb) ){
+            hh = (rr == 0)? 0.0: (gg - bb)/(rr - bb);
+        } else if( (gg > rr) && (rr >= bb) ) {
+            hh = 2.0 - (rr - bb)/(gg - bb);
+        } else if ( (gg >= bb) && (bb > rr) ) {
+            hh = 2.0 + (bb - rr)/(gg - rr);
+        } else if ( (bb > gg) && (gg > rr) ) {
+            hh = 4.0 - (gg - rr)/(bb - rr);
+        } else if ( (bb > rr) && (rr >= gg) ) {
+            hh = 4.0 + (rr - gg)/(bb - gg);
+        } else {
+            hh = 6.0 - (bb - gg)/(rr - gg);
+        }
+
+        return (int)Math.round(hh*60);
     }
 
     /**

@@ -5,6 +5,7 @@ import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.JLabel;
 import javax.swing.JFrame;
+import javax.swing.BorderFactory;
 import javax.swing.event.ChangeEvent;
 
 import java.awt.Color;
@@ -24,6 +25,8 @@ import java.awt.event.ActionEvent;
 *   Although a HueMaskControl object can be a stand-alone JComponent, a flexible layout can be done
 *   by getting individual layout components (such as nameLabel, nameField, huesample etc.) as 
 *   public fields.
+*
+*   TODO: rewrite update methods to use valueIsAdjusting property of JComponent.
 */
 public class HueMaskControl extends JComponent
     implements  javax.swing.event.ChangeListener,
@@ -51,6 +54,7 @@ public class HueMaskControl extends JComponent
     int         _onset      = Hue.MINIMUM;
     int         _offset     = Hue.MAXIMUM;
     Color       _color      = Color.WHITE;
+    int         _packed     = -1;
     boolean _sliderChanging = false;
     boolean _fieldChanging  = false;
 
@@ -64,6 +68,7 @@ public class HueMaskControl extends JComponent
     /**
     *   implementation for ActionListener (receives events from text fields)
     */
+    @Override
     public void actionPerformed(ActionEvent ae)
     {
 
@@ -86,8 +91,10 @@ public class HueMaskControl extends JComponent
                 setOnset(value);
                 _fieldChanging = false;
             } catch (NumberFormatException e1) {
+                _fieldChanging = false;
                 onsetField.setText(String.valueOf(_onset));
             } catch (RuntimeException e2) {
+                _fieldChanging = false;
                 onsetField.setText(String.valueOf(_onset));
             }
         } else if ( src == offsetField )
@@ -98,9 +105,11 @@ public class HueMaskControl extends JComponent
                 setOffset(value);
                 _fieldChanging = false;
             } catch (NumberFormatException e3) {
-                offsetField.setText(String.valueOf(_offset));
+                _fieldChanging = false;
+                setOffset(_offset);
             } catch (RuntimeException e4) {
-                offsetField.setText(String.valueOf(_offset));
+                _fieldChanging = false;
+                setOffset(_offset);
             }
         }
     }
@@ -117,6 +126,11 @@ public class HueMaskControl extends JComponent
     public Color getColor()
     {
         return _color;
+    }
+
+    public int getRGB()
+    {
+        return _packed;
     }
 
     public String getName()
@@ -144,6 +158,7 @@ public class HueMaskControl extends JComponent
         con.gridy       = offsety + 0;
         con.gridwidth   = 1; con.gridheight  = 1;
         con.weightx     = 1;
+        con.anchor      = GridBagConstraints.LAST_LINE_START;
         layout.setConstraints(mask.nameLabel, con);
         content.add(mask.nameLabel);
 
@@ -152,15 +167,18 @@ public class HueMaskControl extends JComponent
         con.gridy       = offsety + 1;
         con.gridwidth   = 1; con.gridheight  = 1;
         con.weightx     = 1;
+        con.anchor      = GridBagConstraints.LINE_START;
         layout.setConstraints(mask.nameField, con);
         content.add(mask.nameField);
 
         // add hue sample
+        mask.hueSample.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
         con.gridx       = offsetx + 1;
         con.gridy       = offsety + 0;
         con.gridwidth   = 1; con.gridheight  = 2;
         con.fill        = GridBagConstraints.BOTH;
         con.weightx     = 1;
+        con.anchor      = GridBagConstraints.CENTER;
         layout.setConstraints(mask.hueSample, con);
         content.add(mask.hueSample);
 
@@ -170,6 +188,7 @@ public class HueMaskControl extends JComponent
         con.gridwidth   = 1; con.gridheight  = 1;
         con.fill        = GridBagConstraints.EAST;
         con.weightx     = 1;
+        con.anchor      = GridBagConstraints.LINE_END;
         layout.setConstraints(mask.onsetLabel, con);
         content.add(mask.onsetLabel);
 
@@ -185,6 +204,7 @@ public class HueMaskControl extends JComponent
         con.gridy       = offsety + 0;
         con.fill        = GridBagConstraints.HORIZONTAL;
         con.weightx     = UI_SLIDER_WEIGHT;
+        con.anchor      = GridBagConstraints.CENTER;
         layout.setConstraints(mask.onsetSlider, con);
         content.add(mask.onsetSlider);
 
@@ -200,6 +220,7 @@ public class HueMaskControl extends JComponent
         con.gridy       = offsety + 0;
         con.fill        = GridBagConstraints.WEST;
         con.weightx     = 1;
+        con.anchor      = GridBagConstraints.LINE_START;
         layout.setConstraints(mask.onsetField, con);
         content.add(mask.onsetField);
 
@@ -293,6 +314,7 @@ public class HueMaskControl extends JComponent
     /**
     *   implementation for ChangeListener (receives from sliders)
     */
+    @Override
     public void stateChanged(ChangeEvent e)
     {
         if( _sliderChanging == true )
@@ -305,19 +327,21 @@ public class HueMaskControl extends JComponent
             _sliderChanging = true;
             try{
                 setOnset(onsetSlider.getValue());
+                _sliderChanging = false;
             } catch (RuntimeException e1) {
-                onsetSlider.setValue(_onset);
+                _sliderChanging = false;
+                setOnset(_onset);
             }
-            _sliderChanging = false;
         } else if ( src == offsetSlider )
         {
             _sliderChanging = true;
             try {   
                 setOffset(offsetSlider.getValue());
+                _sliderChanging = false;
             } catch (RuntimeException e2) {
-                offsetSlider.setValue(_offset);
+                _sliderChanging = false;
+                setOffset(_offset);
             }
-            _sliderChanging = false;
         }
     }
 
@@ -328,6 +352,7 @@ public class HueMaskControl extends JComponent
     {
         _color = Hue.getColor((_onset + _offset)/2);
         hueSample.setBackground(_color);
+        _packed = _color.getRGB() & 0xFFFFFF;
     }
 
     public static void main(String[] args)
