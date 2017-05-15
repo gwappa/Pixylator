@@ -1,2 +1,7 @@
 *.class
 testing
+*.aux
+*.log
+*.out
+*.synctex.gz
+*.toc
