@@ -1,7 +1,8 @@
-*.class
+classes/*.class
+Pixylator_alpha*.class
+Virtual_H264*.class
 testing
-*.aux
-*.log
-*.out
-*.synctex.gz
-*.toc
+document
+dist
+classes
+*.pptx
