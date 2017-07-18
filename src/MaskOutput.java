@@ -5,10 +5,10 @@ package lab.proj.chaos.colortrack;
 *   an abstraction of generation of mask images.
 */
 public interface MaskOutput
-    extends TrackingListener
+    extends TrackerElement
 {
     static final String PREFIX      = "MASK_";
-    
+
     /**
     *   color the specified pixel on the current slice.
     */

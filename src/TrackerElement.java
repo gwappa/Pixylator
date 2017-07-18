@@ -6,22 +6,23 @@ import java.io.IOException;
 /**
 *   an abstraction of any type of results generation during color tracking.
 */
-public interface TrackingListener
+public interface TrackerElement
 {
     /**
     *   returns the name of the parameter to show
     */
-    String getParamName();
+    String getElementName();
 
     /**
     *   returns the 'key' to the parameter (saved in the configs)
     */
-    String getParamKey();
+    String getElementKey();
 
     /**
     *   a callback to let the object know that the tracking is starting.
+    *   @return whether to accept start (return false to cancel)
     */
-    void startOutput(String title, int width, int height, int nslice) throws IOException;
+    boolean startOutput(String title, int width, int height, int nslice) throws IOException;
 
     /**
     *   a callback to let the object know that the tracking is over.

@@ -15,19 +15,20 @@ public class NoMeasurementOutput
     static final String KEY     = "no_output";
 
     @Override
-    public String getParamName(){
+    public String getElementName(){
         return NAME;
     }
 
     @Override
-    public String getParamKey(){
+    public String getElementKey(){
         return KEY;
     }
 
     @Override
-    public void startOutput(String title, int width, int height, int slices) throws IOException
+    public boolean startOutput(String title, int width, int height, int slices) throws IOException
     {
         // do nothing
+        return true;
     }
 
     @Override

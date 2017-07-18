@@ -2,7 +2,7 @@
 package lab.proj.chaos.colortrack;
 
 public interface Measurement
-    extends TrackingListener
+    extends TrackerElement
 {
     static final int INT_TYPE       = 0;
     static final int DOUBLE_TYPE    = 1;
@@ -10,7 +10,7 @@ public interface Measurement
     /**
     *   returns the value type that this TrackingListener returns.
     */
-    int getParamType();
+    int getValueType();
 
     /**
     *   for duplicating itself for other categories.

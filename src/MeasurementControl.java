@@ -45,10 +45,10 @@ public class MeasurementControl extends JPanel
 
     public MeasurementControl addMeasurement(Measurement calc)
     {
-        String key = calc.getParamKey();
+        String key = calc.getElementKey();
         boolean initial = false;
 
-        JCheckBox button = new JCheckBox(calc.getParamName(), initial);
+        JCheckBox button = new JCheckBox(calc.getElementName(), initial);
         button.setActionCommand(key);
         button.addActionListener(this);
         remove(_glue);

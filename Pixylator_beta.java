@@ -1,16 +1,12 @@
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.process.ImageProcessor;
-import ij.process.ColorProcessor;
-import ij.measure.ResultsTable;
 import ij.gui.Roi;
 import ij.io.SaveDialog;
 import ij.io.OpenDialog;
 
 import java.util.Properties;
 import java.util.List;
-import java.util.Iterator;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -24,7 +20,6 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.JLabel;
 import javax.swing.JButton;
-import javax.swing.JTextField;
 import javax.swing.JComboBox;
 import javax.swing.BoxLayout;
 import javax.swing.Box;
@@ -42,7 +37,7 @@ import lab.proj.chaos.colortrack.*;
 *   TODO: save configs for OutputControl
 *   TODO: reorganize what to import
 */
-public class Pixylator_alpha extends JFrame
+public class Pixylator_beta extends JFrame
     implements  ij.plugin.PlugIn,
                 java.awt.event.WindowListener,
                 java.awt.event.ActionListener,
@@ -67,7 +62,7 @@ public class Pixylator_alpha extends JFrame
 
     // singleton management
     private static boolean          initialized     = false;
-    private static Pixylator_alpha  singleton       = null;
+    private static Pixylator_beta   singleton       = null;
 
 
     // GUI parts
@@ -78,6 +73,7 @@ public class Pixylator_alpha extends JFrame
     HueMaskControl[]    _masks      = new HueMaskControl[MASK_CAPACITY];
     MeasurementControl  _measure    = new MeasurementControl();
     OutputControl       _output     = new OutputControl();
+    JButton             _open       = new JButton("Open...");
     JButton             _run        = new JButton("Run");
     JButton             _save       = new JButton("Save...");
     JButton             _load       = new JButton("Load...");
@@ -94,21 +90,11 @@ public class Pixylator_alpha extends JFrame
     // reference image
     ImagePlus    _ip;
 
-    // the buffer for calulation of centroid etc.
-    // CoordinateBuffer [] _buf         = new CoordinateBuffer[MASK_CAPACITY];
-
     // image and ROI setting
-    int _imagewidth, _imageheight, _slicenumber, _slicestart, _slicestop, _nprocess, _offsetx, _offsety, _runwidth, _runheight;
-
-    // output settings
-    // boolean _calc_mask, _calc_cent, _calc_minmax, _calc_angle, _calc_line, _calc_results;
-
-    // results pointers
-    // ResultsTable _results;
-    // ImagePlus    _maskout;
+    // int _imagewidth, _imageheight, _slicenumber, _slicestart, _slicestop, _nprocess, _offsetx, _offsety, _runwidth, _runheight;
 
 
-    public Pixylator_alpha()
+    public Pixylator_beta()
     {
         super("Pixylator Control");
         addWindowListener(this);
@@ -134,7 +120,7 @@ public class Pixylator_alpha extends JFrame
     /**
     *   a general exception handler. writes the stack trace to ImageJ log window.
     */
-    private void logException(Exception e)
+    private void logError(Exception e)
     {
         StringWriter w = new StringWriter();
         e.printStackTrace(new PrintWriter(w));
@@ -150,7 +136,7 @@ public class Pixylator_alpha extends JFrame
     public void run(String arg)
     {
         if( singleton == null ){
-            singleton = new Pixylator_alpha();
+            singleton = new Pixylator_beta();
         }
         singleton.forceUpdateCurrentImage();
         singleton.setVisible(true);
@@ -162,11 +148,11 @@ public class Pixylator_alpha extends JFrame
     private void setupMasks()
     {
         _masks[0] = new HueMaskControl("Magenta");
-        _masks[0].setOnset(275);
+        _masks[0].setOnset(260);
         _masks[0].setOffset(360);
         _masks[1] = new HueMaskControl("Green");
-        _masks[1].setOnset(120);
-        _masks[1].setOffset(180);
+        _masks[1].setOnset(90);
+        _masks[1].setOffset(225);
     }
 
     /**
@@ -187,10 +173,13 @@ public class Pixylator_alpha extends JFrame
 
         // configure target image (0, 0, all, 1)
         JComboBox<String> imagebox = new JComboBox<String>(_images);
+        _open.setActionCommand(OPEN_IMAGE);
+        _open.addActionListener(this);
         JPanel image_selection = new JPanel();
         image_selection.setLayout(new BoxLayout(image_selection, BoxLayout.LINE_AXIS));
         image_selection.add(new JLabel("Target image: "));
         image_selection.add(imagebox);
+        image_selection.add(_open);
         image_selection.add(Box.createHorizontalGlue());
         con.gridx       = 0;
         con.gridy       = 0;
@@ -361,6 +350,7 @@ public class Pixylator_alpha extends JFrame
     /**
     *   lets Pixylator perform a command.
     *
+    *   open_image          opens a new image.
     *   run_pixylator       runs a tracking process (see Pixylator.runTracking()).
     *   replot_histogram    lets the histogram to replot itself (see Pixylator.updateHistogram()).
     *   current_roi         sets the ROI settings according to the current ROI in ImageJ
@@ -397,12 +387,30 @@ public class Pixylator_alpha extends JFrame
         } else if ( command.equals(FrameControl.SET_FRAME_ALL) ) {
             _frame.setStart(1);
             _frame.setStop(_ip.getStackSize());
+        } else if ( command.equals(OPEN_IMAGE) ) {
+            openImage();
         } else if ( command.equals(SAVE_CONFIGS) ) {
             saveConfigs();
         } else if ( command.equals(LOAD_CONFIGS) ) {
             loadConfigs();
         } else
             IJ.showMessage("Pixylator error","command not found: "+command);
+    }
+
+    public void openImage(){
+        OpenDialog  od = new OpenDialog("Open image...");
+        String fileName = od.getFileName();
+        if (fileName == null) return;
+        String fileDir = od.getDirectory();
+        if (fileDir == null) fileDir = IJ.getDirectory("image");
+
+        try {
+            Virtual_H264 img = new Virtual_H264();
+            img.open(fileDir, fileName);
+        } catch (Exception e) {
+            ImagePlus img = IJ.openImage(fileDir + fileName);
+            img.show();
+        }
     }
 
     /**
@@ -414,6 +422,7 @@ public class Pixylator_alpha extends JFrame
         if( DEBUG ){
             IJ.log("Pixylator alpha: preparing for tracking...");
         }
+        resetHistogramGenerationThread();
         resetTrackingThread();
         _tracker.clearListeners();
         _tracker.setMeasurements(_measure.getEnabledMeasurements());
@@ -481,7 +490,7 @@ public class Pixylator_alpha extends JFrame
     {
         Roi roi = _ip.getRoi();
         if( roi == null ){
-            setRoi(0, 0, _imagewidth, _imageheight);
+            setRoi(0, 0, _ip.getWidth(), _ip.getHeight());
         } else {
             Rectangle r = roi.getBounds();
             setRoi(r.x, r.y, r.width, r.height);
@@ -545,7 +554,7 @@ public class Pixylator_alpha extends JFrame
             properties.store(out, "Pixylator (alpha) configuration file");
 
         } catch (IOException e) {
-            logException(e);
+            logError(e);
         } finally {
             if( out != null ){
                 try {
@@ -580,7 +589,7 @@ public class Pixylator_alpha extends JFrame
             in = new FileInputStream(new File(dir, name));
             properties.load(in);
         } catch (IOException e) {
-            logException(e);
+            logError(e);
             return;
         } finally {
             if( in != null ){
@@ -678,7 +687,7 @@ public class Pixylator_alpha extends JFrame
 
     public static void main(String [] args)
     {
-        Pixylator_alpha frame = new Pixylator_alpha();
+        Pixylator_beta frame = new Pixylator_beta();
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }

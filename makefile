@@ -11,7 +11,7 @@ OUTDIR=-d ${BINDIR}
 OPT=-cp ${CP} -Xlint -Xlint:-path -Xdiags:verbose
 JAVAC=javac ${BOOT} ${OUTDIR} ${OPT}
 
-ROOTCLASS=Pixylator_alpha.class
+ROOTCLASS=Pixylator_beta.class
 UICONTROLS=HistogramControl.class ROIControl.class FrameControl.class
 CALC=CentroidCalculator.class CMCalculator.class
 MEASOUT=NoMeasurementOutput.class ResultsTableOutput.class CSVOutput.class
@@ -40,7 +40,7 @@ Pixylation.class: Measurement.class MeasurementOutput.class MaskOutput.class Hue
 
 ${JARFILE}: ActionDelegate.class FrameControl.class ROIControl.class OutputControl.class ${CALC}
 ${JARFILE}: HistogramControl.class HueHistogram.class HueMaskControl.class
-${JARFILE}: MeasurementControl.class Hue.class Luma.class MaskOutput.class TrackingListener.class
+${JARFILE}: MeasurementControl.class Hue.class Luma.class MaskOutput.class TrackerElement.class
 ${JARFILE}: Measurement.class MeasurementOutput.class MeasurementControl.class
 ${JARFILE}: FileNameFunctions.class
 
@@ -51,7 +51,7 @@ HistogramControl.class: ActionDelegate.class ParameterModel.class ParameterNotif
 HueHistogram.class: Hue.class
 HueMaskControl.class:
 OutputControl.class: OutputSelector.class MaskOutput.class MeasurementOutput.class ${MEASOUT} ${MASKOUT}
-OutputSelector.class: TrackingListener.class
+OutputSelector.class: TrackerElement.class
 MeasuermentControl.class: Measurement.class
 Hue.class:
 ${CALC}: AbstractMeasurement.class MeasurementOutput.class
@@ -61,17 +61,17 @@ ResultsTableOutput.class: FileNameFunctions.class
 ImageStackOutput.class: FileNameFunctions.class
 H264MaskOutput.class: FileNameFunctions.class
 AbstractMeasurement.class: Measurement.class MeasurementOutput.class
-Measurement.class: TrackingListener.class MeasurementOutput.class
-MeasurementOutput.class: TrackingListener.class
-MaskOutput.class: TrackingListener.class
-TrackingListener.class:
+Measurement.class: TrackerElement.class MeasurementOutput.class
+MeasurementOutput.class: TrackerElement.class
+MaskOutput.class: TrackerElement.class
+TrackerElement.class:
 
 ParameterNotifier.class: ParameterModel.class ParameterListener.class
 ParameterModel.class: ParameterListener.class
 ParameterListener.class:
 
 extra: ${JARFILE}
-	javac ${BOOT} ${OPT} Pixylator_alpha.java Virtual_H264.java
+	javac ${BOOT} ${OPT} Virtual_H264.java Pixylator_beta.java
 clean:
 	rm -rf ${BINDIR}/* *.class
 

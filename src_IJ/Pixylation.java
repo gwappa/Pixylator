@@ -120,10 +120,13 @@ public class Pixylation
     /**
     *   initializes all the tracking listeners properly.
     */
-    protected void initTracking() throws IOException
+    protected boolean initTracking() throws IOException
     {
         measure = (stats.get(0).size() > 0) && (out != null);
-        Iterator<? extends TrackingListener> it;
+        List<TrackerElement> initialized = new LinkedList<TrackerElement>();
+        TrackerElement element;
+        boolean canceled = false;
+        Iterator<? extends TrackerElement> it;
         String maskname;
 
         // process stats
@@ -134,25 +137,55 @@ public class Pixylation
             for(int i=0; i<nMask; i++){
                 it = stats.get(i).iterator();
                 maskname = masks[i].getName();
-                while(it.hasNext())
-                    it.next().startOutput(maskname, imageWidth, imageHeight, nFrame);
+                while(it.hasNext()){
+                    element = it.next();
+                    if( !element.startOutput(maskname, imageWidth, imageHeight, nFrame) ){
+                        canceled = true;
+                        break;
+                    }
+                    initialized.add(element);
+                }
             }
         }
 
-        // process views
-        if( DEBUG ){
-            IJ.log("Pixylation: initializing mask outputs...");
+        if( !canceled ){
+            // process views
+            if( DEBUG ){
+                IJ.log("Pixylation: initializing mask outputs...");
+            }
+            it = views.iterator();
+            while(it.hasNext()){
+                element = it.next();
+                if( !element.startOutput(title, imageWidth, imageHeight, nFrame) ){
+                    canceled = true;
+                    break;
+                }
+                initialized.add(element);
+            }
         }
-        it = views.iterator();
-        while(it.hasNext())
-            it.next().startOutput(title, imageWidth, imageHeight, nFrame);
 
-        // process out
-        if( DEBUG ){
-            IJ.log("Pixylation: initializing the measurement output...");
+        if( !canceled ){
+            // process out
+            if( DEBUG ){
+                IJ.log("Pixylation: initializing the measurement output...");
+            }
+            if( measure ){
+                if( !out.startOutput(title, imageWidth, imageHeight, nFrame) ){
+                    canceled = true;
+                } else {
+                    initialized.add(out);
+                }
+            }
         }
-        if( measure ){
-            out.startOutput(title, imageWidth, imageHeight, nFrame);
+
+        if( canceled ){
+            it = initialized.iterator();
+            while(it.hasNext()){
+                it.next().endOutput(0);
+            }
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -164,7 +197,7 @@ public class Pixylation
         if( DEBUG ){
             IJ.log("Pixylation: preparing for the next slice...");
         }
-        Iterator<? extends TrackingListener> it;
+        Iterator<? extends TrackerElement> it;
 
         if( measure ){
             // process stats
@@ -185,7 +218,7 @@ public class Pixylation
     }
 
     /**
-    *   calls add() to corresponding TrackingListeners.
+    *   calls add() to corresponding TrackerElements.
     */
     protected void addPixel(int category, int x, int y, int gray)
     {
@@ -226,7 +259,7 @@ public class Pixylation
             IJ.log("Pixylation: finalizing the tracking operation...");
         }
 
-        Iterator<? extends TrackingListener> it;
+        Iterator<? extends TrackerElement> it;
 
         if( measure ){
             // process stats
@@ -276,7 +309,9 @@ public class Pixylation
             IJ.resetEscape();
 
             try {
-                initTracking();
+                if( initTracking() == false ){
+                    return;
+                }
             } catch (IOException ioe) {
                 IJLogger.logError(ioe);
                 return;

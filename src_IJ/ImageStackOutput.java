@@ -40,17 +40,17 @@ public class ImageStackOutput
     }
 
     @Override
-    public String getParamName(){
+    public String getElementName(){
         return NAME;
     }
 
     @Override
-    public String getParamKey(){
+    public String getElementKey(){
         return KEY;
     }
 
     @Override
-    public void startOutput(String title, int width, int height, int slices) throws IOException
+    public boolean startOutput(String title, int width, int height, int slices) throws IOException
     {
         isStack = (slices > 1);
         String base = FileNameFunctions.getBaseName(title);
@@ -74,6 +74,7 @@ public class ImageStackOutput
         } else {
             current = createSlice();
         }
+        return true;
     }
 
     @Override

@@ -42,8 +42,8 @@ public class OutputControl
 
     public boolean saveConfigs(Properties properties)
     {
-        properties.setProperty("output.measurement", results.getSelectedOutput().getParamKey());
-        properties.setProperty("output.mask", mask.getSelectedOutput().getParamKey());
+        properties.setProperty("output.measurement", results.getSelectedOutput().getElementKey());
+        properties.setProperty("output.mask", mask.getSelectedOutput().getElementKey());
         return true;
     }
 

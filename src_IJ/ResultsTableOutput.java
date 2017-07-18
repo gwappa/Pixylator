@@ -27,17 +27,17 @@ public class ResultsTableOutput
     int             current     = 0;
 
     @Override
-    public String getParamName(){
+    public String getElementName(){
         return NAME;
     }
 
     @Override
-    public String getParamKey(){
+    public String getElementKey(){
         return KEY;
     }
 
     @Override
-    public void startOutput(String title, int width, int height, int slices) throws IOException
+    public boolean startOutput(String title, int width, int height, int slices) throws IOException
     {
         String base = FileNameFunctions.getBaseName(title);
         tableName   = PREFIX + base;
@@ -45,6 +45,7 @@ public class ResultsTableOutput
         if( DEBUG ){
             IJ.log("ResultsTableOutput: created a table for: "+tableName);
         }
+        return true;
     }
 
     @Override

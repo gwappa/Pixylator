@@ -25,22 +25,22 @@ public class H264MaskOutput
     int        width, height;
 
     @Override
-    public String getParamName(){
+    public String getElementName(){
         return OUTPUT_NAME;
     }
 
     @Override
-    public String getParamKey(){
+    public String getElementKey(){
         return OUTPUT_KEY;
     }
 
     @Override
-    public void startOutput(String title, int width, int height, int nslice) throws IOException
+    public boolean startOutput(String title, int width, int height, int nslice) throws IOException
     {
         SaveDialog  dialog      = new SaveDialog("Save as H.264...", PREFIX+FileNameFunctions.getBaseName(title), EXT);
         String      filename    = dialog.getFileName();
         if( filename == null ){
-            throw new IOException("H264MaskOutput canceled Pixylation");
+            return false; // cancel pixylation
         }
         String      path        = new java.io.File(dialog.getDirectory(), filename).getAbsolutePath();
 
@@ -57,6 +57,7 @@ public class H264MaskOutput
         if( DEBUG ){
             IJ.log("H264MaskOutput: starting logging.");
         }
+        return true;
     }
 
     @Override

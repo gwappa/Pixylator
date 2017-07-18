@@ -13,7 +13,7 @@ import java.util.Hashtable;
 import javax.swing.event.ListDataListener;
 import javax.swing.event.ListDataEvent;
 
-public class OutputSelector<T extends TrackingListener>
+public class OutputSelector<T extends TrackerElement>
     implements javax.swing.ComboBoxModel<String>
 {
     List<ListDataListener>  listeners   = new LinkedList<ListDataListener>();
@@ -34,7 +34,7 @@ public class OutputSelector<T extends TrackingListener>
     }
 
     public void addOutput(T output){
-        String label = output.getParamName();
+        String label = output.getElementName();
         labels.add(label);
         workers.put(label, output);
         update();
@@ -84,7 +84,7 @@ public class OutputSelector<T extends TrackingListener>
             T worker;
             while(it.hasNext()){
                 worker = it.next();
-                if( worker.getParamKey() == key ){
+                if( worker.getElementKey() == key ){
                     selected = worker;
                     break;
                 }
@@ -93,7 +93,7 @@ public class OutputSelector<T extends TrackingListener>
                 selection = null;
                 throw new RuntimeException(String.format("The output with name '%s' was not found.", key));
             } else {
-                selection = selected.getParamName();
+                selection = selected.getElementName();
             }
         }
     }

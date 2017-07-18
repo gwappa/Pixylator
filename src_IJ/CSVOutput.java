@@ -31,24 +31,24 @@ public class CSVOutput
     List<String>    values  = new LinkedList<String>();
 
     @Override
-    public String getParamName()
+    public String getElementName()
     {
         return OUTPUT_NAME;
     }
 
     @Override
-    public String getParamKey()
+    public String getElementKey()
     {
         return OUTPUT_KEY;
     }
 
     @Override
-    public void startOutput(String title, int width, int height, int nslice) throws IOException
+    public boolean startOutput(String title, int width, int height, int nslice) throws IOException
     {
         SaveDialog  dialog      = new SaveDialog("Save results as CSV...", PREFIX+FileNameFunctions.getBaseName(title), EXT);
         String      filename    = dialog.getFileName();
         if( filename == null ){
-            throw new IOException("CSVOutput canceled Pixylation");
+            return false; // cancel tracking
         }
         String      path        = new java.io.File(dialog.getDirectory(), filename).getAbsolutePath();
 
@@ -56,6 +56,7 @@ public class CSVOutput
         headers.clear();
         values.clear();
         headerWritten = false;
+        return true;
     }
 
     @Override

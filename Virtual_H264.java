@@ -32,65 +32,80 @@ public class Virtual_H264
     List<RGBCopyTarget> frames = null;
     RGBCopyTarget       single = null;
 
+    public Virtual_H264(){
+        super();
+    }
+
     @Override
     public void run(String arg)
     {
         OpenDialog  od = new OpenDialog("Select file to open", arg);
-        fileName = od.getFileName();
-        if (fileName == null) return;
-        fileDir = od.getDirectory();
-        String path = fileDir + fileName;
-
-        proxy = new FFmpegReader(path);
         try {
-            proxy.open();
-            IJ.showStatus("Counting frames...");
-            proxy.sweep(null); // no callback for now
-            width  = proxy.getWidth();
-            height = proxy.getHeight();
-            nframe = proxy.getFrameCount();
-
-            if( !configure() ){
-                proxy.close();
-                return;
-            }
-
-            if( !direct ){
-                IJ.showStatus(String.format("Reading frames: %d/%d...",0,nframe));
-                frames = new ArrayList<RGBCopyTarget>(nframe);
-                synchronized (org.bytedeco.javacpp.avcodec.class){
-                    for(int i=0; i<nframe; i++){
-                        IJ.showStatus(String.format("Reading frames: %d/%d...",i,nframe));
-                        IJ.showProgress(i, nframe);
-                        single = new DefaultRGBCopyTarget(width, height);
-                        proxy.copyRGBFrameUnsafe(i, single);
-                        frames.add(single);
-                    }
-                }
-                IJ.showProgress(1.0);
-            } else {
-                single = new DefaultRGBCopyTarget(width, height);
-            }
-            IJ.showStatus("done.");
-            if( DEBUG ){
-                IJ.log("done loading H.264 file.");
-            }
-            img = new ImagePlus(fileName, this);
-            img.show();
-
-            // connect window close event to closeProxy()
-            Window win = WindowManager.getWindow(img.getTitle());
-            win.addWindowListener(new java.awt.event.WindowAdapter(){
-                public void windowClosed(java.awt.event.WindowEvent e){
-                    if( DEBUG ){
-                        IJ.log("window closed: "+img.getTitle());
-                    }
-                    closeProxy();
-                }
-            });
+            open(od.getDirectory(), od.getFileName());
         } catch (Exception e) {
             error(e);
         }
+    }
+
+    public void open(String dir, String file) throws Exception
+    {
+        if (file == null) return;
+        if (dir == null)  dir = IJ.getDirectory("image");
+
+        fileName = file;
+        fileDir  = dir;
+
+        if( proxy != null ){
+            closeProxy();
+        }
+        String path = fileDir + fileName;
+
+        proxy = new FFmpegReader(path);
+        proxy.open();
+        IJ.showStatus("Counting frames...");
+        proxy.sweep(null); // no callback for now
+        width  = proxy.getWidth();
+        height = proxy.getHeight();
+        nframe = proxy.getFrameCount();
+
+        if( !configure() ){
+            proxy.close();
+            return;
+        }
+
+        if( !direct ){
+            IJ.showStatus(String.format("Reading frames: %d/%d...",0,nframe));
+            frames = new ArrayList<RGBCopyTarget>(nframe);
+            synchronized (org.bytedeco.javacpp.avcodec.class){
+                for(int i=0; i<nframe; i++){
+                    IJ.showStatus(String.format("Reading frames: %d/%d...",i,nframe));
+                    IJ.showProgress(i, nframe);
+                    single = new DefaultRGBCopyTarget(width, height);
+                    proxy.copyRGBFrameUnsafe(i, single);
+                    frames.add(single);
+                }
+            }
+            IJ.showProgress(1.0);
+        } else {
+            single = new DefaultRGBCopyTarget(width, height);
+        }
+        IJ.showStatus("done.");
+        if( DEBUG ){
+            IJ.log("done loading H.264 file.");
+        }
+        img = new ImagePlus(fileName, this);
+        img.show();
+
+        // connect window close event to closeProxy()
+        Window win = WindowManager.getWindow(img.getTitle());
+        win.addWindowListener(new java.awt.event.WindowAdapter(){
+            public void windowClosed(java.awt.event.WindowEvent e){
+                if( DEBUG ){
+                    IJ.log("window closed: "+img.getTitle());
+                }
+                closeProxy();
+            }
+        });
     }
 
     public void closeProxy()

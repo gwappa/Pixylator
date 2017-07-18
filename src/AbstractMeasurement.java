@@ -28,25 +28,26 @@ public abstract class AbstractMeasurement
     }
 
     @Override
-    public final String getParamName() {
+    public final String getElementName() {
         return name;
     }
 
     @Override
-    public final String getParamKey() {
+    public final String getElementKey() {
         return key;
     }
 
     @Override
-    public final int getParamType() {
+    public final int getValueType() {
         return type;
     }
 
     @Override
-    public void startOutput(String category, int width, int height, int nslice)
+    public boolean startOutput(String category, int width, int height, int nslice)
         throws IOException
     {
         this.category = category;
+        return true;
     }
 
     @Override

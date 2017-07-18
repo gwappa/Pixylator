@@ -64,6 +64,12 @@ public class HistogramGeneration
                 IJ.showStatus("Pixylator: reset frame settings to generate histogram.");
                 return;
             }
+            if( maxSample == 0 ){
+                if( DEBUG ){
+                    IJ.log("max sample set to 0. no histogram update.");
+                }
+                return;
+            }
 
             long totalPixels = ((long)(stopFrame - startFrame + 1))*roiWidth*roiHeight;
             int  inc         = 1;
@@ -133,6 +139,7 @@ public class HistogramGeneration
         } catch (Throwable t) {
             IJLogger.logError(t);
         }
+        IJ.freeMemory();
     }
 
     @Override

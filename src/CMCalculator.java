@@ -41,7 +41,7 @@ public class CMCalculator
     public void write(MeasurementOutput out)
         throws java.io.IOException
     {
-        out.print(getCategory(), MEAN_X, sumx*1.0/count);
-        out.print(getCategory(), MEAN_Y, sumy*1.0/count);
+        out.print(getCategory(), MEAN_X, (count>0)? (sumx*1.0/count):Double.NaN);
+        out.print(getCategory(), MEAN_Y, (count>0)? (sumy*1.0/count):Double.NaN);
     }
 }

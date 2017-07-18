@@ -7,10 +7,10 @@ import java.io.IOException;
 *   the abstraction layer for results table output.
 */
 public interface MeasurementOutput
-    extends TrackingListener
+    extends TrackerElement
 {
     static final String PREFIX         = "Results_";
-    
+
     /**
     *   using the internal slice counter, output single attribute value.
     */
