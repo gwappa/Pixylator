@@ -1,15 +1,24 @@
+
+# change the following pointers before running 'make'
+
+RT=../../jre/lib/rt.jar
+IJ=../../ImageJ.app/Contents/Java/ij.jar
+
+#
+# then run 'make plugin' or 'make rebuild' to build everything
+#
+
 SRCDIR=src src_IJ
+BUILDDIR=Pixylator
 BINDIR=classes
 MANI=manifest
-VPATH+=${BINDIR} ${BINDIR}/lab/proj/chaos/colortrack ${SRCDIR}
+VPATH+=${BINDIR} ${BINDIR}/lab/proj/chaos/colortrack ${SRCDIR} ${BUILDDIR}
 
-JRE=/Applications/ImageJ/jre/lib/rt.jar
-IJ=/Applications/ImageJ/ImageJ.app/Contents/Java/ij.jar
-CP=${BINDIR}:.:vio.jar:javacpp.jar:
-BOOT=-source 1.6 -target 1.6 -Xbootclasspath/p:${JRE} -Xbootclasspath/p:${IJ}
+CP=${BINDIR}:.:vio.jar:javacpp.jar
+BOOT=${RT}:${IJ}
 OUTDIR=-d ${BINDIR}
-OPT=-cp ${CP} -Xlint -Xlint:-path -Xdiags:verbose
-JAVAC=javac ${BOOT} ${OUTDIR} ${OPT}
+OPT=-bootclasspath ${BOOT} -cp ${CP} -Xlint -Xlint:-path -Xdiags:verbose
+JAVAC=javac ${OUTDIR} ${OPT}
 
 ROOTCLASS=Pixylator_beta.class
 UICONTROLS=HistogramControl.class ROIControl.class FrameControl.class
@@ -17,19 +26,22 @@ CALC=CentroidCalculator.class CMCalculator.class
 MEASOUT=NoMeasurementOutput.class ResultsTableOutput.class CSVOutput.class
 MASKOUT=NoMaskOutput.class ImageStackOutput.class H264MaskOutput.class
 JARFILE=colortrack.jar
-BUILDDIR=Pixylator
-ZIPFILE=Pixylator_build.zip
+TARBALL=Pixylator_build.tar.gz
 
 ${JARFILE}:
 	jar cvfm $@ ${MANI} -C ${BINDIR} lab
 
-build: ${JARFILE} extra
+build: ${TARBALL}
+${TARBALL}: ${JARFILE} plugin
 	mkdir build/${BUILDDIR}
 	cp *.jar *.class build/${BUILDDIR}
-	zip -rv build/${ZIPFILE} build/${BUILDDIR}
+	cd build && tar zcvf ${TARBALL} ${BUILDDIR}/*
 	rm -rf build/${BUILDDIR}
 
-%.class: %.java
+${BINDIR}:
+	mkdir $@
+
+%.class: %.java ${BINDIR}
 	${JAVAC} $<
 
 ${JARFILE}: ImageSelector.class HistogramGeneration.class Pixylation.class
@@ -70,8 +82,8 @@ ParameterNotifier.class: ParameterModel.class ParameterListener.class
 ParameterModel.class: ParameterListener.class
 ParameterListener.class:
 
-extra: ${JARFILE}
-	javac ${BOOT} ${OPT} Virtual_H264.java Pixylator_beta.java
+plugin: ${JARFILE}
+	javac ${OPT} Virtual_H264.java Pixylator_beta.java
 clean:
 	rm -rf ${BINDIR}/* *.class
 

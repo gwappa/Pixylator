@@ -64,6 +64,39 @@ public class Pixylator_beta extends JFrame
     private static boolean          initialized     = false;
     private static Pixylator_beta   singleton       = null;
 
+    public class ImageOpener extends JButton
+        implements PixylatorDirectives, Runnable
+    {
+        static final long serialVersionUID = 1L;
+
+        public ImageOpener(String text) {
+           super(text);
+           setActionCommand(OPEN_IMAGE);
+        }
+
+        public void run() {
+            OpenDialog  od = new OpenDialog("Open image...");
+            String fileName = od.getFileName();
+            IJ.log("filename: "+fileName);
+            if (fileName == null) {
+                return;
+            }
+            String fileDir = od.getDirectory();
+            if (fileDir == null) {
+                fileDir = IJ.getDirectory("image");
+            }
+
+            try {
+                Virtual_H264 img = new Virtual_H264();
+                img.open(fileDir, fileName);
+            } catch (Throwable t) {
+                logError(t);
+                ImagePlus img = IJ.openImage(fileDir + fileName);
+                img.show();
+            }
+        }
+    }
+
 
     // GUI parts
     FrameControl        _frame      = new FrameControl();
@@ -73,7 +106,7 @@ public class Pixylator_beta extends JFrame
     HueMaskControl[]    _masks      = new HueMaskControl[MASK_CAPACITY];
     MeasurementControl  _measure    = new MeasurementControl();
     OutputControl       _output     = new OutputControl();
-    JButton             _open       = new JButton("Open...");
+    ImageOpener         _open       = new ImageOpener("Open...");
     JButton             _run        = new JButton("Run");
     JButton             _save       = new JButton("Save...");
     JButton             _load       = new JButton("Load...");
@@ -120,7 +153,7 @@ public class Pixylator_beta extends JFrame
     /**
     *   a general exception handler. writes the stack trace to ImageJ log window.
     */
-    private void logError(Exception e)
+    private void logError(Throwable e)
     {
         StringWriter w = new StringWriter();
         e.printStackTrace(new PrintWriter(w));
@@ -173,7 +206,6 @@ public class Pixylator_beta extends JFrame
 
         // configure target image (0, 0, all, 1)
         JComboBox<String> imagebox = new JComboBox<String>(_images);
-        _open.setActionCommand(OPEN_IMAGE);
         _open.addActionListener(this);
         JPanel image_selection = new JPanel();
         image_selection.setLayout(new BoxLayout(image_selection, BoxLayout.LINE_AXIS));
@@ -398,19 +430,8 @@ public class Pixylator_beta extends JFrame
     }
 
     public void openImage(){
-        OpenDialog  od = new OpenDialog("Open image...");
-        String fileName = od.getFileName();
-        if (fileName == null) return;
-        String fileDir = od.getDirectory();
-        if (fileDir == null) fileDir = IJ.getDirectory("image");
-
-        try {
-            Virtual_H264 img = new Virtual_H264();
-            img.open(fileDir, fileName);
-        } catch (Exception e) {
-            ImagePlus img = IJ.openImage(fileDir + fileName);
-            img.show();
-        }
+        Thread t = new Thread(_open);
+        t.start();
     }
 
     /**

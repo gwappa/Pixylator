@@ -69,7 +69,7 @@ public class Virtual_H264
         nframe = proxy.getFrameCount();
 
         if( !configure() ){
-            proxy.close();
+            closeProxy();
             return;
         }
 
@@ -96,27 +96,43 @@ public class Virtual_H264
         img = new ImagePlus(fileName, this);
         img.show();
 
-        // connect window close event to closeProxy()
+        // connect window close event to closeBuffer()
         Window win = WindowManager.getWindow(img.getTitle());
         win.addWindowListener(new java.awt.event.WindowAdapter(){
             public void windowClosed(java.awt.event.WindowEvent e){
                 if( DEBUG ){
                     IJ.log("window closed: "+img.getTitle());
                 }
-                closeProxy();
+                closeBuffer();
             }
         });
     }
 
-    public void closeProxy()
+    public void closeBuffer()
     {
-        if( proxy == null ) return;
+        if( proxy != null ){
+           closeProxy();
+        }
+        if( frames != null ){
+            if( DEBUG ){
+                IJ.log("clearing buffer...");
+            }
+            frames.clear();
+            frames = null;
+        }
+        IJ.freeMemory();
+    }
+
+    protected void closeProxy()
+    {
+        assert proxy != null;
 
         try {
             proxy.close();
         } catch (Exception e) {
             error(e);
         }
+        proxy = null;
     }
 
     public void error(Throwable e)
