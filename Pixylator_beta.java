@@ -77,7 +77,6 @@ public class Pixylator_beta extends JFrame
         public void run() {
             OpenDialog  od = new OpenDialog("Open image...");
             String fileName = od.getFileName();
-            IJ.log("filename: "+fileName);
             if (fileName == null) {
                 return;
             }
